@@ -3,6 +3,7 @@
 /../frontend
 /../.gitignore
 /../README.md
+/../frontend/src/logs
 
 # dependencies
 /node_modules
