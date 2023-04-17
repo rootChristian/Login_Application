@@ -1,10 +1,10 @@
 # LOGIN APPLICATION
 
-### Backend
+# `Backend dependencies:`
 
 # `Frontend dependencies:`
 
-# Getting Started with Create React App
+## Getting Started with Create React App
 
 -   `npx create-react-app`
 
