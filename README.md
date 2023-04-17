@@ -8,7 +8,7 @@
 
 ### Install a dependencies
 
--   `npm i -s nodemon -D express express-rate-limit express-async-handler express-async-errors redis connect-redis express-session cookie-parser cors dotenv uuid date-fns jsonwebtoken crypto-js multer mongoose mongoose-sequence`
+-   `npm i -s nodemon -D express express-rate-limit helmet express-async-handler express-async-errors express-session cookie-parser cors dotenv uuid date-fns jsonwebtoken crypto-js multer mongoose mongoose-sequence`
 
 ### links utils
 
@@ -27,6 +27,7 @@
 -   https://www.npmjs.com/package/mongoose
 -   https://www.npmjs.com/package/crypto-js
 -   https://www.npmjs.com/package/multer
+-   https://www.npmjs.com/package/helmet
 
 ## `Frontend dependencies:`
 
