@@ -41,7 +41,7 @@ app.enable('trust proxy'); // app.set('trust proxy', 1);
 connectWithRetry();
 
 app.use('/', express.static(path.join(__dirname, 'public')));
-///app.use('/', require('./src/routes/root'));
+app.use('/', require('./src/routes/root'));
 
 ///app.use(`${api}/auth`, authRoutes);
 ///app.use(`${api}/users`, userRoutes);
