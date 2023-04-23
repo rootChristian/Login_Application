@@ -51,7 +51,7 @@ module.exports.login = asyncHandler(async (req, res) => {
 
         const { accessToken, refreshToken } = await tokenGenerator(user);
 
-        res.status(200).json({ error: false, status: "Login Successful..."/*, message: accessToken*/ });
+        res.status(200).json({ error: false, accessToken, refreshToken, message: "Login Successful..." });
     } catch (err) {
         console.log(err);
         return res.status(500).json({ error: true, message: "Internal Server Error" });
