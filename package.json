@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "start": "node server",
     "dev": "nodemon -L server"
@@ -23,7 +23,12 @@
     "uuid": "^9.0.0"
   },
   "dependencies": {
+    "crypto-js": "^4.1.1",
+    "express-rate-limit": "^6.7.0",
     "helmet": "^6.1.5",
+    "joi": "^17.9.1",
+    "joi-password-complexity": "^5.1.0",
+    "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.4"
   }
 }

@@ -19,8 +19,8 @@ const port = process.env.PORT;
 const api = process.env.API_URL;
 
 // Get all the routes
-///const authRoutes = require('./src/routes/authRoute');
-///const userRoutes = require('./src/routes/userRoute');
+const authRoutes = require('./src/routes/authRoute');
+const userRoutes = require('./src/routes/userRoute');
 
 //API security
 app.use(helmet());
@@ -43,8 +43,8 @@ connectWithRetry();
 app.use('/', express.static(path.join(__dirname, 'public')));
 app.use('/', require('./src/routes/root'));
 
-///app.use(`${api}/auth`, authRoutes);
-///app.use(`${api}/users`, userRoutes);
+app.use(`${api}/auth`, authRoutes);
+app.use(`${api}/users`, userRoutes);
 
 app.all('*', (req, res) => {
     res.status(404)
