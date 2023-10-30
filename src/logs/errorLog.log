@@ -1,4 +1,0 @@
-20230421	19:01:46	fe2d418e-3352-4855-bf7d-8f7c7942cdd8	Error: Cannot set headers after they are sent to the client	GET	/api/v1/users/knc9	undefined
-20230421	21:30:51	4abb1b29-a7aa-459e-b261-450c4926076a	Too Many Requests (IP: ::1): Too many login attempts from this IP, please try again after a 3 minutes pause	POST	/	undefined
-20230422	17:11:15	dc8f64cc-988a-459e-b746-84d9f6b40470	Too Many Requests (IP: ::1): Too many login attempts from this IP, please try again after a 3 minutes pause	POST	/	undefined
-20230422	17:13:20	e910661a-65d2-4db1-9365-60ef0baa7c8a	Too Many Requests (IP: ::1): Too many login attempts from this IP, please try again after a 3 minutes pause	POST	/	undefined

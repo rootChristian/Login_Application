@@ -145,7 +145,15 @@ const getParamsValidation = (params) => {
 
 const refreshTokenBodyValidation = (body) => {
     const schema = Joi.object({
-        refreshToken: Joi.string().required().label("Refresh Token"),
+        refreshToken: Joi.string()
+            .required()
+            .empty()
+            .label("Refresh Token")
+            .messages({
+                "string.base": `"refreshToken" should be a type of 'text'`,
+                "string.empty": `"refreshToken" cannot be an empty field`,
+                "any.required": `"refreshToken" is a required field`
+            })
     });
     return schema.validate(body);
 };

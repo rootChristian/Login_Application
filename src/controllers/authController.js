@@ -1,15 +1,19 @@
 /***********************************************************************
-************ Author:    Christian KEMGANG NGUESSOP *********************
-************ Version:    1.0.0                      ********************
-***********************************************************************/
-const UserModel = require('../models/userModel');
-const CryptoJS = require('crypto-js');
-const jwt = require('jsonwebtoken');
-const asyncHandler = require('express-async-handler');
-const session = require('express-session');
-const { signInBodyValidation } = require('../middleware/validationSchema');
-const { tokenGenerator } = require('../middleware/generateToken');
-
+ ************ Author:    Christian KEMGANG NGUESSOP *********************
+ ************ Version:    1.0.0                      ********************
+ ***********************************************************************/
+const UserModel = require("../models/userModel");
+const TokenModel = require("../models/tokenModel");
+const CryptoJS = require("crypto-js");
+const jwt = require("jsonwebtoken");
+const asyncHandler = require("express-async-handler");
+const session = require("express-session");
+const {
+    signInBodyValidation,
+    refreshTokenBodyValidation,
+} = require("../middleware/validationSchema");
+const { tokenGenerator } = require("../middleware/generateToken");
+const verifyRefreshToken = require("../middleware/verifyRefreshToken");
 
 // Middleware to verify if user exist
 module.exports.verifyUser = asyncHandler(async (req, res, next) => {
@@ -18,25 +22,37 @@ module.exports.verifyUser = asyncHandler(async (req, res, next) => {
 
         let exitUser = await UserModel.findOne({ username });
         if (!exitUser)
-            return res.status(404).send({ error: true, message: "Can't find User!" });
+            return res
+                .status(401)
+                .send({ error: true, message: "Can't find User!" });
         next();
     } catch (err) {
         console.log(err);
-        return res.status(500).json({ error: true, message: "Internal Server Error" });
+        return res
+            .status(500)
+            .json({ error: true, message: "Internal Server Error" });
     }
 });
 
+// Login user
 module.exports.login = asyncHandler(async (req, res) => {
     try {
+        expires_max_age = 12 * 60 * 60 * 1000;
         const { error } = signInBodyValidation(req.body);
         if (error)
-            return res.status(400).json({ error: true, message: error.details[0].message });
+            return res
+                .status(400)
+                .json({ error: true, message: error.details[0].message });
 
-        const { username, email, password } = req.body
-        const user = await UserModel.findOne(username ? { username } : { email }).exec();
+        const { username, email, password } = req.body;
+        const user = await UserModel.findOne(
+            username ? { username } : { email }
+        ).exec();
 
         if (!user || !user.active) {
-            return res.status(401).json({ error: true, message: 'Unauthorized!' });
+            return res
+                .status(401)
+                .json({ error: true, message: "Unauthorized!" });
         }
 
         const hashPwd = CryptoJS.AES.decrypt(
@@ -46,129 +62,127 @@ module.exports.login = asyncHandler(async (req, res) => {
 
         const originPassword = hashPwd.toString(CryptoJS.enc.Utf8);
         if (originPassword !== password) {
-            return res.status(401).send({ error: true, message: 'Wrong credentials!' });
+            return res
+                .status(401)
+                .send({ error: true, message: "Wrong credentials!" });
         }
 
         const { accessToken, refreshToken } = await tokenGenerator(user);
 
-        res.status(200).json({ error: false, accessToken, refreshToken, message: "Login Successful..." });
+        // Create and save a secure cookie with refresh token
+        res.cookie("jwt", refreshToken, {
+            httpOnly: true, //accessible only by web server
+            secure: false, //http
+            sameSite: "None", //cross-site cookie
+            maxAge: expires_max_age //cookie expiry after 12h
+        });
+
+        res.status(200).json({
+            error: false,
+            username: user.username,
+            role: user.role,
+            accessToken,
+            refreshToken,
+            message: "Login successfully...",
+        });
     } catch (err) {
         console.log(err);
-        return res.status(500).json({ error: true, message: "Internal Server Error" });
+        return res
+            .status(500)
+            .json({ error: true, message: "Internal Server Error" });
     }
 });
 
-// User login and generate a token and cookie
-module.exports.LOGIN = asyncHandler(async (req, res) => {
+// Refresh token to get the new access token
+module.exports.refreshToken = asyncHandler(async (req, res) => {
+    try {
+        /*
+        const cookies = req.cookies;
+        if (!cookies?.jwt)
+            return res.sendStatus(204); //No content
 
-    const { username, email, password } = req.body
+        const refreshToken = cookies.jwt;
+        */
+        expires_access = process.env.EXPIRES_IN_TOKEN_ACCESS;
 
-    if ((!email && !username)) {
-        return res.status(400).json({ message: 'Username or email is required!' });
+        const { error } = refreshTokenBodyValidation(req.body);
+        if (error)
+            return res
+                .status(401)
+                .json({ error: true, message: error.details[0].message });
+
+        const { refreshToken } = req.body;
+
+        verifyRefreshToken(refreshToken)
+            .then(({ tokenDetails }) => {
+                const payload = {
+                    _id: tokenDetails._id,
+                    username: tokenDetails.username,
+                    role: tokenDetails.role,
+                };
+                // Create a new access token
+                const accessToken = jwt.sign(
+                    payload,
+                    process.env.SECRET_TOKEN_KEY,
+                    { expiresIn: expires_access }
+                );
+
+                res.status(200).json({
+                    error: false,
+                    username: tokenDetails.username,
+                    role: tokenDetails.role,
+                    accessToken,
+                    refreshToken,
+                    message: "Access token created successfully...",
+                });
+            })
+            .catch((err) =>
+                res.status(403).json({
+                    error: true,
+                    message: "Access token unsuccessfully created!",
+                })
+            );
+    } catch (err) {
+        console.log(err);
+        return res
+            .status(500)
+            .json({ error: true, message: "Internal Server Error" });
     }
-
-    if (!password) {
-        return res.status(400).json({ message: 'Password is required!' });
-    }
-
-    const user = await UserModel.findOne(username ? { username } : { email }).exec();
-    //req.session.user = user;
-
-    if (!user || !user.active) {
-        return res.status(401).json({ message: 'Unauthorized!' });
-    }
-
-    const hashPwd = CryptoJS.AES.decrypt(
-        user.password,
-        process.env.SECRET_PASSWORD
-    );
-
-    const originPassword = hashPwd.toString(CryptoJS.enc.Utf8);
-
-    if (originPassword !== password) {
-        return res.status(401).send({ message: 'Wrong credentials!' });
-    }
-
-    const accessToken = jwt.sign(
-        {
-            "UserInfo": {
-                "userId": user._id,
-                "username": user.username,
-                "role": user.role
-            }
-        },
-        process.env.SECRET_TOKEN_KEY,
-        { expiresIn: '15m' }
-    );
-    /*
-        const refreshToken = jwt.sign(
-            { "username": user.username },
-            process.env.REFRESH_TOKEN,
-            { expiresIn: '7d' }
-        )
-    
-        // Create and save a secure cookie with refresh token
-        res.cookie('jwt', refreshToken, {
-            httpOnly: true, //accessible only by web server 
-            secure: false, //http
-            sameSite: 'None', //cross-site cookie 
-            maxAge: 7 * 24 * 60 * 60 * 1000 //cookie expiry after 7 days
-        })
-    */
-    // Save session on redis
-    ////req.session.user = user
-    // Send accessToken containing username and roles 
-    //res.json({ accessToken });
-    res.status(200).json({ status: "Login Successful...", message: accessToken });
 });
-
-/*
-// Refresh token because access token has expired
-module.exports.refresh = (req, res) => {
-    const cookies = req.cookies
-    //console.log("COOK: ", cookies)
-
-    if (!cookies?.jwt) return res.status(401).json({ message: 'Unauthorized!' })
-
-    const refreshToken = cookies.jwt
-    //console.log("COOKIES: ", refreshToken)
-
-    jwt.verify(
-        refreshToken,
-        process.env.REFRESH_TOKEN,
-        asyncHandler(async (err, decoded) => {
-            if (err) return res.status(403).json({ message: 'Forbidden!' });
-
-            const foundUser = await User.findOne({ username: decoded.username }).exec();
-
-            if (!foundUser) return res.status(401).json({ message: 'Unauthorized!' });
-
-            const accessToken = jwt.sign(
-                {
-                    "UserInfo": {
-                        "username": foundUser.username,
-                        "roles": foundUser.roles
-                    }
-                },
-                process.env.ACCESS_TOKEN,
-                { expiresIn: '15m' }
-            )
-
-            res.json({ accessToken });
-        })
-    )
-};
 
 // User clear cookie if exists
-module.exports.logout = (req, res) => {
+module.exports.logout = asyncHandler(async (req, res) => {
+    try {
+        const cookies = req.cookies;
+        if (!cookies?.jwt)
+            return res.sendStatus(204); //No content
 
-    const cookies = req.cookies
-    //console.log('COOKIES: ', cookies?.jwt)
+        const refreshToken = cookies.jwt;
+        //console.log("COOKIES: ", refreshToken)
 
-    if (!cookies?.jwt) return res.sendStatus(204) //No content
+        const foundToken = await TokenModel.findOne({ token: refreshToken }).exec();
 
-    res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true })
-    res.status(200).json({ message: 'Cookie cleared' })
-    //res.redirect('/');
-};
-*/
+        if (!foundToken) {
+            res.clearCookie("jwt", { httpOnly: true, sameSite: "None", secure: true });
+            return res.sendStatus(204); //No content
+        }
+
+        await foundToken.deleteOne();
+        console.log("Logged out successfully");
+
+        res.clearCookie("jwt", {
+            httpOnly: true,
+            sameSite: "None",
+            secure: true
+        });
+
+        res.status(200).json({ message: "Logged out successfully" });
+        //res.redirect('/');
+
+    } catch (err) {
+        console.log(err);
+        return res
+            .status(500)
+            .json({ error: true, message: "Internal Server Error" });
+    }
+});

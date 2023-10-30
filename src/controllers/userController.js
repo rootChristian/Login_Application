@@ -19,7 +19,7 @@ module.exports.getAllUsers = asyncHandler(async (req, res) => {
         res.status(200).json(users);
     } catch (err) {
         console.log(err);
-        res.status(500).json({ error: true, message: "Internal Server Error" });
+        res.status(500).json({ error: true, message: "Internal Server Error!" });
     }
 })
 
@@ -37,7 +37,7 @@ module.exports.getUser = asyncHandler(async (req, res) => {
         res.status(200).json(user);
     } catch (err) {
         console.log(err);
-        res.status(500).json({ error: true, message: "Internal Server Error" });
+        res.status(500).json({ error: true, message: "Internal Server Error!" });
     }
 });
 
@@ -72,13 +72,13 @@ module.exports.createNewUser = asyncHandler(async (req, res) => {
         // Create and store new user 
         const user = await UserModel.create(userObject);
         if (user) {
-            res.status(201).json({ error: false, message: `User ${username} Register Successfully` });
+            res.status(201).json({ error: false, message: `User ${username} Register Successfully...` });
         } else {
-            res.status(400).json({ error: true, message: 'Invalid user data received' });
+            res.status(400).json({ error: true, message: 'Invalid user data received!' });
         }
     } catch (err) {
         console.log(err);
-        res.status(500).json({ error: true, message: "Internal Server Error" });
+        res.status(500).json({ error: true, message: "Internal Server Error!" });
     }
 });
 

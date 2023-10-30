@@ -19,7 +19,7 @@ const connectWithRetry = () => {
             console.log(`The connection to ${mongo_database} is ready...`);
         })
         .catch((err) => {
-            console.log('Connection database is failled...\n', err, '\n\n');
+            console.log('Connection database is failled...\n'/*, err, '\n\n'*/);
             logEvents(`${err}\t${err.codeName} ${err.code}\t`, 'mongoErrLog.log')
             setTimeout(connectWithRetry, 5000)
         })

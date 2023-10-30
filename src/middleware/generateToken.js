@@ -1,3 +1,7 @@
+/***********************************************************************
+************ Author:    Christian KEMGANG NGUESSOP *********************
+************ Version:    1.0.0                      ********************
+***********************************************************************/
 const jwt = require('jsonwebtoken');
 const asyncHandler = require('express-async-handler');
 const TokenModel = require('../models/tokenModel');
@@ -37,4 +41,4 @@ const tokenGenerator = asyncHandler(async (user) => {
     }
 });
 
-module.exports = { tokenGenerator }
+module.exports = { tokenGenerator };

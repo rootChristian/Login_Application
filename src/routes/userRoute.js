@@ -4,11 +4,11 @@
 ***********************************************************************/
 const router = require('express').Router();
 const userController = require("../controllers/userController");
-///const verifyToken = require('../middleware/verifyToken');
+const { auth } = require('../middleware/auth');
 
 //Routes
 // Secure all routes
-///router.use(verifyToken);
+router.use(auth);
 router.get('/', userController.getAllUsers);
 router.get('/:username', userController.getUser);
 router.post('/', userController.createNewUser);
